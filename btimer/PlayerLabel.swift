@@ -14,7 +14,7 @@ class PlayerLabel: UILabel {
         self.text = "PLAYER" + String(i)
         self.addBorder(width: 0.5, color: UIColor.black, position: .bottom)
         self.backgroundColor = UIColor.white
-        self.layer.borderWidth = 0.5
+        self.layer.borderWidth = 0.4
         self.layer.borderColor = UIColor.black.cgColor
     }
 }

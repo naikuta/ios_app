@@ -134,21 +134,8 @@ class ScoreViewController: UIViewController {
                     view.addSubview(imageView)
                     view2.addSubview(image2View)
                     
-                    /*
-                    imageView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.7).isActive = true
-                    imageView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.7).isActive = true
-                    image2View.heightAnchor.constraint(equalTo: view2.heightAnchor, multiplier: 0.7).isActive = true
-                    image2View.widthAnchor.constraint(equalTo: view2.widthAnchor, multiplier: 0.7).isActive = true
-                    */
                     // タップジェスチャーの設定
                     imageView.isUserInteractionEnabled = true
-                    
-                    /*
-                    let ges = UITapGestureRecognizer(
-                        target: self,
-                        action: #selector(gestureTap(sender:)))
-                    imageView.addGestureRecognizer(ges)
-                    */
                     
                     imageView.singleTap { (g) in
                         if UIGestureRecognizer.State.ended == g.state {

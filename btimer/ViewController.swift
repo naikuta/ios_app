@@ -30,7 +30,7 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
     
     var selectedTeam:String = ""
     
-    var scoreA:[[Int]] = [[0, 0, 0, 0, 0]
+    var scoreH:[[Int]] = [[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
@@ -41,7 +41,7 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
                           ,[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]]
     
-    var scoreB:[[Int]] = [[0, 0, 0, 0, 0]
+    var scoreA:[[Int]] = [[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
@@ -69,15 +69,21 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         timerMSecLeft.image = imageZero
         timerMSecRight.image = imageZero
         
+        /*
         let imageZeroGreen:UIImage = UIImage(named:"zero_green")!
         hScoreHundreds.image = imageZeroGreen
         hScoreTenth.image = imageZeroGreen
         hScoreFirst.image = imageZeroGreen
-        
+        */
+        /*
         let imageZeroYellow:UIImage = UIImage(named:"zero_yellow")!
         aScoreHundreds.image = imageZeroYellow
         aScoreTenth.image = imageZeroYellow
         aScoreFirst.image = imageZeroYellow
+        */
+        
+        setScoreImageH()
+        setScoreImageA()
     }
     
     override func prepare(for segue:UIStoryboardSegue, sender:Any?) {
@@ -93,10 +99,10 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
             scoreVC.delegate = self
             
             if selectedTeam == "H" {
-                scoreVC.scoreData = scoreA
+                scoreVC.scoreData = scoreH
                 scoreVC.selectTeam = "H"
             } else if selectedTeam == "A" {
-                scoreVC.scoreData = scoreB
+                scoreVC.scoreData = scoreA
                 scoreVC.selectTeam = "A"
             }
             
@@ -104,9 +110,12 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
             
             let scoreResultVC = segue.destination as! ScoreResultViewController
 
-            let scoreData = addTwoDimensionaryArray(before: scoreA, affter: scoreB)
+            let scoreData = addTwoDimensionaryArray(before: scoreH, affter: scoreA)
             
             scoreResultVC.scoreArray = scoreData
+            
+            scoreResultVC.scoreDataH = scoreH
+            scoreResultVC.scoreDataA = scoreA
         }
     }
     
@@ -128,10 +137,12 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         timer.invalidate()
         
         //let intervalTime = (setMin + setSec + setMSec) - currentTime
-        
-        setMin = currentTime / 60
+        let a = currentTime
+        setMin = Double((Int)((currentTime / 60)) * 60)
         setSec = fmod(currentTime, 60)
+        let b = setMin
         setMSec =  currentTime - floor(currentTime)
+        
     }
     
     @IBAction func TimerStart(_ sender: Any) {
@@ -159,6 +170,8 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         let a = intervalTime/60
         let b = setMin - a
         //let minute = (Int)((setMin - (currentTime/60))/60)
+        let e = setSec
+        let f = setMSec
         let setTime = setMin + setSec + setMSec
         let minute = (Int)((setTime - intervalTime)/60)
         
@@ -175,17 +188,17 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         
         currentTime = setTime - intervalTime
         
-        if minute <= 0 && second <= 0 && msec <= 0 {
-            timer.invalidate()
-            return
-        }
-        
         timerMinLeft.image = intToImage(num: minute, use: "T")[1]
         timerMinRight.image = intToImage(num: minute, use: "T")[2]
         timerSecLeft.image = intToImage(num: second, use: "T")[1]
         timerSecRight.image = intToImage(num: second, use: "T")[2]
         timerMSecLeft.image = intToImage(num: msec, use: "T")[1]
         timerMSecRight.image = intToImage(num: msec, use: "T")[2]
+        
+        if minute <= 0 && second <= 0 && msec <= 0 {
+            timer.invalidate()
+            return
+        }
     }
     
     @IBAction func OnTimerSetButton(_ sender: Any) {
@@ -245,33 +258,15 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
 
         if team == "H" {
             
-            var total:Int = 0
-            scoreA = sd
+            scoreH = sd
             
-            for i in 0..<9 {
-                let point = scoreA[i][1]
-                total += point
-            }
-            
-            let hScoreImage = intToImage(num: total, use: "H")
-            hScoreHundreds.image = hScoreImage[0]
-            hScoreTenth.image = hScoreImage[1]
-            hScoreFirst.image = hScoreImage[2]
+            setScoreImageH()
             
         } else if team == "A" {
+
+            scoreA = sd
             
-            var total:Int = 0
-            scoreB = sd
-            
-            for i in 0..<9 {
-                let point = scoreB[i][1]
-                total += point
-            }
-            
-            let aScoreImage = intToImage(num: total, use: "A")
-            aScoreHundreds.image = aScoreImage[0]
-            aScoreTenth.image = aScoreImage[1]
-            aScoreFirst.image = aScoreImage[2]
+            setScoreImageA()
         }
     }
     
@@ -289,12 +284,16 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
             }
         }
         
+        var bCount: Int = 0
+        var aCount: Int = 0
+        
         for i in aArray.count..<(aArray.count + bArray.count) {
-            totalArray = [[]]
-            for j in 0..<bArray[i].count {
+            for j in 0..<bArray[bCount].count {
                 //totalArray[totalArray.count].append(bArray[i][j])
-                totalArray[i][j] = aArray[i][j]
+                totalArray[i][j] = bArray[aCount][j]
             }
+            bCount = bCount + 1
+            aCount = aCount + 1
         }
         return totalArray
     }
@@ -372,6 +371,36 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
             }
         }
         return imageArray
+    }
+    
+    func setScoreImageH() {
+        
+        var total:Int = 0
+        
+        for i in 0...9 {
+            let point = scoreH[i][1]
+            total += point
+        }
+        
+        let hScoreImage = intToImage(num: total, use: "H")
+        hScoreHundreds.image = hScoreImage[0]
+        hScoreTenth.image = hScoreImage[1]
+        hScoreFirst.image = hScoreImage[2]
+    }
+    
+    func setScoreImageA() {
+        
+        var total:Int = 0
+        
+        for i in 0..<9 {
+            let point = scoreA[i][1]
+            total += point
+        }
+        
+        let aScoreImage = intToImage(num: total, use: "A")
+        aScoreHundreds.image = aScoreImage[0]
+        aScoreTenth.image = aScoreImage[1]
+        aScoreFirst.image = aScoreImage[2]
     }
 }
 
