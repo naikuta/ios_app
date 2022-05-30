@@ -21,10 +21,13 @@ class TimerModalViewController: UIViewController, UIPickerViewDataSource, UIPick
     
     private var dataSource = [Int](0...60)
     private var secDataSource = [Int](0...59)
+    private var msecDataSource = [Int](0...99)
     
     var minSelected: Int = 0
     var secSelected: Int = 0
     var mSecSelected: Int = 0
+    
+    var time: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,6 +40,16 @@ class TimerModalViewController: UIViewController, UIPickerViewDataSource, UIPick
         minSecPickerView.dataSource = self
         secPickerView.delegate = self
         secPickerView.dataSource = self
+        
+        let timeStr = getRowNumFromTime(time: time)
+        
+        self.minPicker.selectRow(Int(timeStr[0])!, inComponent: 0, animated: false)
+        self.secPickerView.selectRow(Int(timeStr[1])!, inComponent: 0, animated: false)
+        self.minSecPickerView.selectRow(Int(timeStr[2])!, inComponent: 0, animated: false)
+        
+        minSelected = Int(timeStr[0])!
+        secSelected = Int(timeStr[1])!
+        mSecSelected = Int(timeStr[2])!
     }
     
     @IBAction func TimerModalClose(_ sender: Any) {
@@ -60,8 +73,10 @@ class TimerModalViewController: UIViewController, UIPickerViewDataSource, UIPick
             return dataSource.count
         } else if pickerView == self.secPickerView {
             return secDataSource.count
+        } else if pickerView == self.minSecPickerView {
+            return msecDataSource.count
         } else {
-            return dataSource.count
+            return 0
         }
     }
     
@@ -71,8 +86,8 @@ class TimerModalViewController: UIViewController, UIPickerViewDataSource, UIPick
             minSelected = dataSource[row]
         } else if pickerView == self.secPickerView {
             secSelected = dataSource[row]
-        } else {
-            mSecSelected = dataSource[row]
+        } else if pickerView == self.minSecPickerView {
+            mSecSelected = msecDataSource[row]
         }
     }
     
@@ -82,15 +97,33 @@ class TimerModalViewController: UIViewController, UIPickerViewDataSource, UIPick
             return String(dataSource[row])
         } else if pickerView == self.secPickerView {
             return String(secDataSource[row])
+        } else if pickerView == self.minSecPickerView {
+            return String(msecDataSource[row])
         } else {
-            return String(dataSource[row])
+            return String(0)
         }
     }
     
     @IBAction func onResetButton(_ sender: Any) {
+        
+        /*
         pickerView(self.minPicker, didSelectRow: 0, inComponent: 0)
         pickerView(self.minPicker, didSelectRow: 0, inComponent: 1)
         pickerView(self.minPicker, didSelectRow: 0, inComponent: 2)
+        */
+        
+        self.minPicker.selectRow(0, inComponent: 0, animated: false)
+        self.secPickerView.selectRow(0, inComponent: 0, animated: false)
+        self.minSecPickerView.selectRow(0, inComponent: 0, animated: false)
+        
+        minSelected = 0
+        secSelected = 0
+        mSecSelected = 0
+    }
+    
+    func getRowNumFromTime(time: String) -> [String.SubSequence] {
+        
+        return time.split(separator: ":")
     }
 }
 

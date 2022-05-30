@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import RealmSwift
 
 class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreModalViewControllerProtocol {
     
@@ -30,6 +31,7 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
     
     var selectedTeam:String = ""
     
+    /*
     var scoreH:[[Int]] = [[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
@@ -51,6 +53,11 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
                           ,[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]
                           ,[0, 0, 0, 0, 0]]
+    */
+    
+    //var playersH: Array<Player> = []
+    var playersH = [Player(), Player(), Player(), Player(), Player(), Player(), Player(), Player(), Player(), Player()]
+    var playersA = [Player(), Player(), Player(), Player(), Player(), Player(), Player(), Player(), Player(), Player()]
     
     var setMin: Double = 0
     var setSec: Double = 0
@@ -92,30 +99,39 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
             
             let timerVC = segue.destination as! TimerModalViewController
             timerVC.delegate = self
-        
+            timerVC.time = String(Int(setMin))
+                            + ":" + String(Int(setSec)) + ":" + String(Int(setMSec))
+            
         } else if segue.destination is ScoreViewController {
             
             let scoreVC = segue.destination as! ScoreViewController
             scoreVC.delegate = self
             
             if selectedTeam == "H" {
-                scoreVC.scoreData = scoreH
+                //scoreVC.scoreData = scoreH
+                scoreVC.players = self.playersH
                 scoreVC.selectTeam = "H"
             } else if selectedTeam == "A" {
-                scoreVC.scoreData = scoreA
+                //scoreVC.scoreData = scoreA
+                scoreVC.players = self.playersA
                 scoreVC.selectTeam = "A"
             }
             
         } else if segue.destination is ScoreResultViewController {
             
             let scoreResultVC = segue.destination as! ScoreResultViewController
-
-            let scoreData = addTwoDimensionaryArray(before: scoreH, affter: scoreA)
             
-            scoreResultVC.scoreArray = scoreData
+            scoreResultVC.game.gameTitle = createGameTitle()
             
-            scoreResultVC.scoreDataH = scoreH
-            scoreResultVC.scoreDataA = scoreA
+            scoreResultVC.teamH.teamName = createTeamNameH()
+            scoreResultVC.teamA.teamName = createTeamNameA()
+            
+            scoreResultVC.teamScoreH = String(sumScore(player: self.playersH))
+            scoreResultVC.teamScoreA = String(sumScore(player: self.playersA))
+            
+            scoreResultVC.playersH = self.playersH
+            scoreResultVC.playersA = self.playersA
+            
         }
     }
     
@@ -126,30 +142,28 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
     
     @IBAction func modalbutton(_ sender: Any) {
         performSegue(withIdentifier: "ModalSeque", sender: nil)
-        
-        /*let modalVC = storyboard?.instantiateViewController(identifier: "ModalView")
-
-        self.present(modalVC!, animated: true, completion: nil)*/
     }
     
     @IBAction func onTimerStop(_ sender: Any) {
         
-        timer.invalidate()
-        
-        //let intervalTime = (setMin + setSec + setMSec) - currentTime
-        let a = currentTime
-        setMin = Double((Int)((currentTime / 60)) * 60)
-        setSec = fmod(currentTime, 60)
-        let b = setMin
-        setMSec =  currentTime - floor(currentTime)
+        if timer != nil {
+            timer.invalidate()
+            setMin = Double((Int)((currentTime / 60)))
+            setSec = fmod(floor(currentTime), 60)
+            setMSec =  (currentTime - floor(currentTime)) * 100
+        }
         
     }
     
     @IBAction func TimerStart(_ sender: Any) {
         
-        if timer != nil{
+        if timer != nil {
             // timerが起動中なら一旦破棄する
             timer.invalidate()
+        }
+        
+        if setMin <= 0 && setSec <= 0 && setMSec <= 0 {
+            return
         }
         
         timer = Timer.scheduledTimer(
@@ -166,24 +180,16 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         // タイマー開始からのインターバル時間
         let intervalTime = Date().timeIntervalSince(startTime)
         // fmod() 余りを計算
-        //let minute = 2 - (Int)(fmod((currentTime/60), 60))
-        let a = intervalTime/60
-        let b = setMin - a
-        //let minute = (Int)((setMin - (currentTime/60))/60)
-        let e = setSec
-        let f = setMSec
-        let setTime = setMin + setSec + setMSec
+        let min = setMin * 60
+        let mSec = setMSec / 100
+        let setTime = min + setSec + mSec
         let minute = (Int)((setTime - intervalTime)/60)
         
         // currentTime/60 の余り
-        //let second = setSec - (Int)(fmod(currentTime, 60))
         let second = (Int)(fmod(setTime - intervalTime, 60))
         
         // floor 切り捨て、小数点以下を取り出して *100
-        //let msec = 100 - (Int)((currentTime - floor(currentTime))*100)
-        let d = (Double)(setTime)
         let intervalMSec = (Double)(setTime) - intervalTime
-        let c = floor(intervalMSec)
         let msec = (Int)((intervalMSec - floor(intervalMSec)) * 100)
         
         currentTime = setTime - intervalTime
@@ -196,7 +202,13 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         timerMSecRight.image = intToImage(num: msec, use: "T")[2]
         
         if minute <= 0 && second <= 0 && msec <= 0 {
+            
+            setMin = 0
+            setSec = 0
+            setMSec = 0
+            
             timer.invalidate()
+            
             return
         }
     }
@@ -227,10 +239,9 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         timerMSecLeft.image = msecImage[1]
         timerMSecRight.image = msecImage[2]
         
-        let a = Double(min)! * 60
-        setMin = Double(min)! * 60
+        setMin = Double(min)!
         setSec = Double(sec)!
-        setMSec = Double(msec)! / 100
+        setMSec = Double(msec)!
     }
     
     @IBAction func onHomeButton(_ sender: Any) {
@@ -254,18 +265,20 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
     /*
      スコアモーダル 閉じた際に呼ばれる
      */
-    func scoreModalDidFinished(team:String, sd:[[Int]]){
+    func scoreModalDidFinished(team:String, sd:Array<Player>){
 
         if team == "H" {
             
-            scoreH = sd
+            //scoreH = sd
             
+            playersH = sd
             setScoreImageH()
             
         } else if team == "A" {
 
-            scoreA = sd
+            //scoreA = sd
             
+            playersA = sd
             setScoreImageA()
         }
     }
@@ -378,7 +391,7 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         var total:Int = 0
         
         for i in 0...9 {
-            let point = scoreH[i][1]
+            let point = playersH[i].p
             total += point
         }
         
@@ -392,8 +405,8 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         
         var total:Int = 0
         
-        for i in 0..<9 {
-            let point = scoreA[i][1]
+        for i in 0...9 {
+            let point = playersA[i].p
             total += point
         }
         
@@ -401,6 +414,53 @@ class ViewController: UIViewController, TimerModalViewControllerProtocol, ScoreM
         aScoreHundreds.image = aScoreImage[0]
         aScoreTenth.image = aScoreImage[1]
         aScoreFirst.image = aScoreImage[2]
+    }
+    
+    
+    func createTeamNameH() -> String {
+        
+        var teamName:String = ""
+        
+        let realm = try! Realm()
+        let team = realm.objects(Team.self)
+        
+        teamName = "home" + String(team.count/2 + 1)
+        
+        return teamName
+    }
+    
+    func createTeamNameA() -> String {
+        
+        var teamName:String = ""
+        
+        let realm = try! Realm()
+        let team = realm.objects(Team.self)
+        
+        teamName = "away" + String(team.count/2 + 1)
+        
+        return teamName
+    }
+    
+    func sumScore(player: Array<Player>) -> Int {
+        
+        var total: Int = 0
+        
+        for p in player {
+            total = total + p.p
+        }
+        return total
+    }
+    
+    func createGameTitle() -> String {
+        
+        var gameTitle:String = ""
+        
+        let realm = try! Realm()
+        let game = realm.objects(Game.self)
+        
+        gameTitle = "game title" + String(game.count + 1)
+        
+        return gameTitle
     }
 }
 

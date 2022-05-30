@@ -8,7 +8,7 @@
 import UIKit
 
 protocol ScoreModalViewControllerProtocol {
-    func scoreModalDidFinished(team:String, sd:[[Int]])
+    func scoreModalDidFinished(team:String, sd:Array<Player>)
 }
 
 class ScoreViewController: UIViewController {
@@ -19,10 +19,12 @@ class ScoreViewController: UIViewController {
     
     @IBOutlet weak var scoreTitleStack: UIStackView!
     
-    //@IBOutlet weak var scoreTable: UITableView!
-    
     var scoreData:[[Int]] = []
     var selectTeam: String = ""
+    
+    var players:Array<Player> = []
+    
+    var imageStackWidth = UIScreen.main.bounds.width * 0.7 * 0.16 * 0.5
     
     override func viewDidLoad() {
         
@@ -40,8 +42,9 @@ class ScoreViewController: UIViewController {
             
             let label:UILabel = UILabel()
             label.layer.borderWidth = 0.5
-            label.layer.borderColor = UIColor.black.cgColor
+            label.layer.borderColor = UIColor.gray.cgColor
             label.textAlignment = .center
+            label.textColor = UIColor.white
             
             switch h {
             case 1:
@@ -70,14 +73,8 @@ class ScoreViewController: UIViewController {
             let scoreView = UIStackView()
             scoreView.axis = .horizontal
             scoreView.distribution = .fillEqually
-            //scoreView.addBorder(width: 0.5, color: UIColor.black, position: //.bottom)
-            scoreView.backgroundColor = UIColor.gray
             
             for j in 0..<6 {
-
-                //playerLabel.textAlignment = .center
-                //playerLabel.text = "PLAYER"
-                //playerLabel.backgroundColor = UIColor(red: 0, green: 0, blue: //10, alpha: 1.0)
                 
                 if j == 0 {
                     let playerLabel:PlayerLabel = PlayerLabel()
@@ -91,12 +88,14 @@ class ScoreViewController: UIViewController {
                     let scoringView: UIStackView = UIStackView()
                     scoringView.axis = .vertical
                     scoringView.layer.borderWidth = 0.5
-                    scoringView.layer.borderColor = UIColor.black.cgColor
-                    //scoringView.backgroundColor = UIColor(red: 0, green: 0, blue: //10, alpha: 1.0)
+                    scoringView.layer.borderColor = UIColor.gray.cgColor
                     
                     let scoreLabel:UILabel = UILabel()
-                    scoreLabel.setTextConvert(score: scoreData[i][j-1])
+                    //scoreLabel.setTextConvert(score: scoreData[i][j-1])
+                    scoreLabel.setScore(p: players[i], prop: j)
                     scoreLabel.textAlignment = .center
+                    scoreLabel.textColor = UIColor.white
+                    scoreLabel.backgroundColor = UIColor.black
                     
                     let buttonView:UIStackView = UIStackView()
                     buttonView.axis = .horizontal
@@ -105,7 +104,11 @@ class ScoreViewController: UIViewController {
                     let view: UIView = UIView()
                     let view2: UIView = UIView()
                     
-                    view.backgroundColor = UIColor(red: 0, green: 10, blue: 10, alpha: 1.0)
+                    view.backgroundColor = UIColor.black
+                    view2.backgroundColor = UIColor.black
+                    
+                    let a = view.frame.width
+                    let b = view.frame.height
                     
                     let image1:UIImage = UIImage(named:"plus.circle.fill")!
                     let imageView = Gesture(image:image1)
@@ -118,15 +121,17 @@ class ScoreViewController: UIViewController {
                     // 画像の縦横サイズを取得
                     let imgWidth:CGFloat = image1.size.width
                     let imgHeight:CGFloat = image1.size.height
-                    let a = scoreView.layer.bounds.width
                     let viewWidth = scoreView.layer.bounds.width / 6
                     //let viewWidth = buttonView.layer.bounds.width
                     
+                    let expImageHeigth = imgHeight * ((imageStackWidth * 0.3) / imgWidth)
+                    
+                    let c = imageStackWidth
                     // 画像サイズをスクリーン幅に合わせる
                     let scale:CGFloat = viewWidth / imgWidth
                     let rect:CGRect =
                         //CGRect(x:0, y:0, width:imgWidth*scale, //height:imgHeight*scale)
-                    CGRect(x:0, y:0, width:imgWidth, height:imgHeight)
+                        CGRect(x:imageStackWidth * 0.3, y:0, width:imageStackWidth * 0.3, height:expImageHeigth)
                     // ImageView frame をCGRectで作った矩形に合わせる
                     imageView.frame = rect;
                     image2View.frame = rect;
@@ -136,29 +141,58 @@ class ScoreViewController: UIViewController {
                     
                     // タップジェスチャーの設定
                     imageView.isUserInteractionEnabled = true
+                    image2View.isUserInteractionEnabled = true
                     
                     imageView.singleTap { (g) in
                         if UIGestureRecognizer.State.ended == g.state {
-                            var point:Int = Int(scoreLabel.text ?? "00")!
+                            var point:Int = Int(scoreLabel.text ?? "0")!
                             point += 1
-                            scoreLabel.text = NSString(format: "%02d", point) as String
+                            scoreLabel.text = String(point)
                             
-                            self.scoreData[i][1] = point
+                            //self.scoreData[i][1] = point
+                            
+                            switch j {
+                            case 1:
+                                self.players[i].sh = point
+                            case 2:
+                                self.players[i].p = point
+                            case 3:
+                                self.players[i].r = point
+                            case 4:
+                                self.players[i].a = point
+                            case 5:
+                                self.players[i].s = point
+                            default:
+                                break
+                            }
                         }
                     }
        
                     image2View.singleTap { (g) in
                         if UIGestureRecognizer.State.ended == g.state {
                             
-                            if scoreLabel.text == "00" {
+                            if scoreLabel.text == "0" {
                                 return
                             }
                             
-                            var point:Int = Int(scoreLabel.text ?? "00")!
+                            var point:Int = Int(scoreLabel.text ?? "0")!
                             point -= 1
-                            scoreLabel.text = NSString(format: "%02d", point) as String
+                            scoreLabel.text = String(point)
                         
-                            self.scoreData[i][1] = point
+                            switch j {
+                            case 1:
+                                self.players[i].sh = point
+                            case 2:
+                                self.players[i].p = point
+                            case 3:
+                                self.players[i].r = point
+                            case 4:
+                                self.players[i].a = point
+                            case 5:
+                                self.players[i].s = point
+                            default:
+                                break
+                            }
                         }
                     }
                     
@@ -182,14 +216,11 @@ class ScoreViewController: UIViewController {
     }
     
     @IBAction func onCloseModal(_ sender: Any) {
-        let a = scoreData
-        self.delegate?.scoreModalDidFinished(team:selectTeam, sd:self.scoreData)
+
+        self.delegate?.scoreModalDidFinished(team:selectTeam, sd:self.players)
         
         dismiss(animated: true, completion: nil)
     }
     
-    @objc func gestureTap(sender: UITapGestureRecognizer) {
-        let t = sender.view?.tag
-    }
 }
 
